@@ -358,6 +358,8 @@ def extract_unified_truck_data(row, file_type):
             'customer_name': 'Unknown Customer',  # Not in this file type
             'dj_departure_time': dj_departure_time,
             'departure_deviation_min': pd.to_numeric(row.get('Departure Time Difference (DJ vs Planned)'), errors='coerce'),
+            'tlp_vol_hl': pd.to_numeric(row.get('TLP Vol HL', row.get('Tlp Vol Hl', row.get('Volume', 0))), errors='coerce'),
+            'planned_arrival_time': make_naive(pd.to_datetime(row.get('Planned Arrival Time'), errors='coerce')),
         }
 
     elif file_type == 'customer_timestamps':
@@ -418,6 +420,7 @@ def extract_unified_truck_data(row, file_type):
             'd1': pd.to_numeric(row.get('Load Start to Gate Exit'), errors='coerce'),
             'd2': pd.to_numeric(row.get('Depot Arrival to Gate Entry Complete'), errors='coerce'),
             'd3': pd.to_numeric(row.get('Gate Entry to load Completion'), errors='coerce'),
+            'clock_out': make_naive(pd.to_datetime(row.get('LoadCompleted', row.get('Load Completed Time', row.get('Closure Time'))), errors='coerce')),
         }
 
     elif file_type == 'avg_time_route':
