@@ -85,7 +85,7 @@ def export_excel_report(request) -> Any:
             item.driver_name or '',
             truck_number or item.truck_number or '',
             item.customer_name or '',
-            '',  # Vol Hl left empty
+            item.tlp_vol_hl or '',  # Vol Hl mapped
             item.load_number or '',  # Invoice Number uses load_number
             'OM',  # Mwarehouse set to OM
             item.budgeted_kms or '',
@@ -113,7 +113,7 @@ def export_excel_report(request) -> Any:
             item.total_hour_route or '',
             item.driver_rest_hours_in_route or '',
             item.total_wh or '',
-            item.tlp or '',
+            item.tlp_vol_hl or '',
             item.D1 or '',
             item.D2 or '',
             item.D3 or '',
