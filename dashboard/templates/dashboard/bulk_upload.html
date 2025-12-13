@@ -86,7 +86,7 @@
                                 </div>
                                 <div class="col-6">
                                     <h3 class="fw-bold text-secondary mb-0">5</h3>
-                                    <small class="text-muted">Required</small>
+                                    <small class="text-muted">Total</small>
                                 </div>
                             </div>
                             <div class="mt-3">
@@ -115,7 +115,7 @@
                                 <p class="small text-muted mb-3">Departure logs from depot</p>
                                 <div class="file-input">
                                     {{ form.depot_departures_file }}
-                                    <label class="btn btn-outline-primary btn-sm w-100">
+                                    <label for="id_depot_departures_file" class="btn btn-outline-primary btn-sm w-100">
                                         <i class="fas fa-plus me-1"></i>Select File
                                     </label>
                                     <div class="small text-truncate mt-2 text-muted file-name"></div>
@@ -135,7 +135,7 @@
                                 <p class="small text-muted mb-3">Arrival/Service logs</p>
                                 <div class="file-input">
                                     {{ form.customer_timestamps_file }}
-                                    <label class="btn btn-outline-info btn-sm w-100">
+                                    <label for="id_customer_timestamps_file" class="btn btn-outline-info btn-sm w-100">
                                         <i class="fas fa-plus me-1"></i>Select File
                                     </label>
                                     <div class="small text-truncate mt-2 text-muted file-name"></div>
@@ -155,7 +155,7 @@
                                 <p class="small text-muted mb-3">Route distance data</p>
                                 <div class="file-input">
                                     {{ form.distance_info_file }}
-                                    <label class="btn btn-outline-success btn-sm w-100">
+                                    <label for="id_distance_info_file" class="btn btn-outline-success btn-sm w-100">
                                         <i class="fas fa-plus me-1"></i>Select File
                                     </label>
                                     <div class="small text-truncate mt-2 text-muted file-name"></div>
@@ -175,7 +175,8 @@
                                 <p class="small text-muted mb-3">General timing data</p>
                                 <div class="file-input">
                                     {{ form.timestamps_duration_file }}
-                                    <label class="btn btn-outline-warning btn-sm w-100">
+                                    <label for="id_timestamps_duration_file"
+                                        class="btn btn-outline-warning btn-sm w-100">
                                         <i class="fas fa-plus me-1"></i>Select File
                                     </label>
                                     <div class="small text-truncate mt-2 text-muted file-name"></div>
@@ -195,7 +196,7 @@
                                 <p class="small text-muted mb-3">Detailed route analytics</p>
                                 <div class="file-input">
                                     {{ form.time_route_info_file }}
-                                    <label class="btn btn-outline-danger btn-sm w-100">
+                                    <label for="id_time_route_info_file" class="btn btn-outline-danger btn-sm w-100">
                                         <i class="fas fa-plus me-1"></i>Select File
                                     </label>
                                     <div class="small text-truncate mt-2 text-muted file-name"></div>
@@ -305,10 +306,6 @@
                 statusBadge.textContent = 'Select Files';
                 statusBadge.className = 'badge bg-secondary fs-6';
                 uploadBtn.disabled = true;
-            } else if (filesSelected < 5) {
-                statusBadge.textContent = 'Incomplete';
-                statusBadge.className = 'badge bg-warning fs-6';
-                uploadBtn.disabled = true;
             } else {
                 statusBadge.textContent = 'Ready to Upload';
                 statusBadge.className = 'badge bg-success fs-6';
@@ -319,7 +316,7 @@
             if (filesSelected > 0) {
                 uploadBtn.innerHTML = `<i class="fas fa-cloud-upload-alt me-2"></i>Upload ${filesSelected} File(s) & Process`;
             } else {
-                uploadBtn.innerHTML = '<i class="fas fa-cloud-upload-alt me-2"></i>Upload & Process All Files';
+                uploadBtn.innerHTML = '<i class="fas fa-cloud-upload-alt me-2"></i>Upload All Files & Process';
             }
         }
 
