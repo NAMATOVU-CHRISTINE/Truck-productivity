@@ -88,6 +88,7 @@ from django.contrib import messages
 from django.http import HttpResponse, JsonResponse
 from django.db.models import Avg, Count, Sum, Min, Max, Q
 from django.utils import timezone
+from django.db import transaction
 from datetime import datetime, timedelta
 import pandas as pd
 import plotly.graph_objects as go
@@ -503,7 +504,8 @@ def process_depot_departures(df, csv_upload):
                 continue
             driver_vehicle_map[driver_name] = vehicle_reg
 
-        for index, row in df.iterrows():
+        with transaction.atomic():
+            for index, row in df.iterrows():
             # Extract data using unified function
             unified_data = extract_unified_truck_data(row, 'depot_departures')
             unified_data['csv_upload'] = csv_upload
@@ -580,7 +582,8 @@ def process_customer_timestamps(df, csv_upload):
         key = (rec.load_number, rec.create_date)
         depot_map[key] = rec.truck_number
 
-    for index, row in df.iterrows():
+    with transaction.atomic():
+        for index, row in df.iterrows():
         try:
             # Extract data using unified function
             unified_data = extract_unified_truck_data(row, 'customer_timestamps')
@@ -631,7 +634,8 @@ def process_distance_info(df, csv_upload):
     """Process distance information CSV file"""
     try:
         current_rows = []
-        for index, row in df.iterrows():
+        with transaction.atomic():
+            for index, row in df.iterrows():
             try:
                 # Extract data using unified function with CORRECT file type
                 unified_data = extract_unified_truck_data(row, 'distance_info')
