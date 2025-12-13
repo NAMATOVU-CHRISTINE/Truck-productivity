@@ -506,61 +506,61 @@ def process_depot_departures(df, csv_upload):
 
         with transaction.atomic():
             for index, row in df.iterrows():
-            # Extract data using unified function
-            unified_data = extract_unified_truck_data(row, 'depot_departures')
-            unified_data['csv_upload'] = csv_upload
+                # Extract data using unified function
+                unified_data = extract_unified_truck_data(row, 'depot_departures')
+                unified_data['csv_upload'] = csv_upload
 
-            # Attach correct vehicle reg to driver name if possible
-            driver_name = str(row.get('Driver Name', '')).strip()
-            if driver_name in driver_vehicle_map:
-                unified_data['truck_number'] = driver_vehicle_map[driver_name]
+                # Attach correct vehicle reg to driver name if possible
+                driver_name = str(row.get('Driver Name', '')).strip()
+                if driver_name in driver_vehicle_map:
+                    unified_data['truck_number'] = driver_vehicle_map[driver_name]
 
-            # Always make all datetime fields naive
-            for dt_field in ['dj_departure_time', 'planned_departure_time', 'arrival_at_depot', 'create_date']:
-                if dt_field in unified_data:
-                    unified_data[dt_field] = make_naive(unified_data[dt_field])
+                # Always make all datetime fields naive
+                for dt_field in ['dj_departure_time', 'planned_departure_time', 'arrival_at_depot', 'create_date']:
+                    if dt_field in unified_data:
+                        unified_data[dt_field] = make_naive(unified_data[dt_field])
 
-            # Add Planned Departure Time from depot departures file if present
-            planned_departure_time = row.get('Planned Departure Time') or row.get('PlannedDepartureTime')
-            if planned_departure_time is not None and planned_departure_time != '':
-                try:
-                    from pandas import to_datetime
-                    parsed = to_datetime(str(planned_departure_time), errors='coerce')
-                    if pd.isna(parsed):
+                # Add Planned Departure Time from depot departures file if present
+                planned_departure_time = row.get('Planned Departure Time') or row.get('PlannedDepartureTime')
+                if planned_departure_time is not None and planned_departure_time != '':
+                    try:
+                        from pandas import to_datetime
+                        parsed = to_datetime(str(planned_departure_time), errors='coerce')
+                        if pd.isna(parsed):
+                            unified_data['planned_departure_time'] = None
+                        else:
+                            unified_data['planned_departure_time'] = make_naive(parsed)
+                    except Exception as ex:
                         unified_data['planned_departure_time'] = None
-                    else:
-                        unified_data['planned_departure_time'] = make_naive(parsed)
-                except Exception as ex:
-                    unified_data['planned_departure_time'] = None
-            else:
-                pass
+                else:
+                    pass
 
-            # Clean up NaN for integer fields (convert to None)
-            for int_field in ['departure_deviation_min', 'ave_departure']:
-                if int_field in unified_data:
-                    val = unified_data[int_field]
-                    if pd.isna(val):
-                        unified_data[int_field] = None
+                # Clean up NaN for integer fields (convert to None)
+                for int_field in ['departure_deviation_min', 'ave_departure']:
+                    if int_field in unified_data:
+                        val = unified_data[int_field]
+                        if pd.isna(val):
+                            unified_data[int_field] = None
 
-            # Create or update the record - preserve existing good data
-            existing_record, created = TruckPerformanceData.objects.get_or_create(
-                load_number=unified_data['load_number'],
-                create_date=unified_data['create_date'],
-                defaults=unified_data
-            )
+                # Create or update the record - preserve existing good data
+                existing_record, created = TruckPerformanceData.objects.get_or_create(
+                    load_number=unified_data['load_number'],
+                    create_date=unified_data['create_date'],
+                    defaults=unified_data
+                )
 
-            # If record already exists, only update fields with real data
-            if not created:
-                for field, value in unified_data.items():
-                    if field not in ['load_number', 'create_date'] and value and str(value) not in ['Unknown', 'Unknown Customer', 'Unknown Driver', 'Unknown Vehicle']:
-                        # Always make datetime fields naive on update
-                        if isinstance(value, (datetime, pd.Timestamp)):
-                            value = make_naive(value)
-                        # Clean up NaN for integer fields on update
-                        if field in ['departure_deviation_min', 'ave_departure'] and pd.isna(value):
-                            value = None
-                        setattr(existing_record, field, value)
-                existing_record.save()
+                # If record already exists, only update fields with real data
+                if not created:
+                    for field, value in unified_data.items():
+                        if field not in ['load_number', 'create_date'] and value and str(value) not in ['Unknown', 'Unknown Customer', 'Unknown Driver', 'Unknown Vehicle']:
+                            # Always make datetime fields naive on update
+                            if isinstance(value, (datetime, pd.Timestamp)):
+                                value = make_naive(value)
+                            # Clean up NaN for integer fields on update
+                            if field in ['departure_deviation_min', 'ave_departure'] and pd.isna(value):
+                                value = None
+                            setattr(existing_record, field, value)
+                    existing_record.save()
 
         csv_upload.processed = True
         csv_upload.save()
@@ -584,39 +584,39 @@ def process_customer_timestamps(df, csv_upload):
 
     with transaction.atomic():
         for index, row in df.iterrows():
-        try:
-            # Extract data using unified function
-            unified_data = extract_unified_truck_data(row, 'customer_timestamps')
-            unified_data['csv_upload'] = csv_upload
+            try:
+                # Extract data using unified function
+                unified_data = extract_unified_truck_data(row, 'customer_timestamps')
+                unified_data['csv_upload'] = csv_upload
 
-            # Always make all datetime fields naive
-            for dt_field in ['arrival_at_customer', 'create_date']:
-                if dt_field in unified_data:
-                    unified_data[dt_field] = make_naive(unified_data[dt_field])
+                # Always make all datetime fields naive
+                for dt_field in ['arrival_at_customer', 'create_date']:
+                    if dt_field in unified_data:
+                        unified_data[dt_field] = make_naive(unified_data[dt_field])
 
-            # Overwrite truck_number with exact Vehicle Reg from depot_departures if available
-            key = (unified_data['load_number'], unified_data['create_date'])
-            if key in depot_map:
-                unified_data['truck_number'] = depot_map[key]
+                # Overwrite truck_number with exact Vehicle Reg from depot_departures if available
+                key = (unified_data['load_number'], unified_data['create_date'])
+                if key in depot_map:
+                    unified_data['truck_number'] = depot_map[key]
 
-            # Try to match with existing load, date, and truck number or create new record - preserve good data
-            existing_record, created = TruckPerformanceData.objects.get_or_create(
-                load_number=unified_data['load_number'],
-                create_date=unified_data['create_date'],
-                truck_number=unified_data['truck_number'],
-                defaults=unified_data
-            )
+                # Try to match with existing load, date, and truck number or create new record - preserve good data
+                existing_record, created = TruckPerformanceData.objects.get_or_create(
+                    load_number=unified_data['load_number'],
+                    create_date=unified_data['create_date'],
+                    truck_number=unified_data['truck_number'],
+                    defaults=unified_data
+                )
 
-            # If record already exists, only update fields with real data
-            if not created:
-                for field, value in unified_data.items():
-                    if field not in ['load_number'] and value and str(value) not in ['Unknown', 'Unknown Customer', 'Unknown Driver', 'Unknown Vehicle']:
-                        if isinstance(value, (datetime, pd.Timestamp)):
-                            value = make_naive(value)
-                        setattr(existing_record, field, value)
-                existing_record.save()
-        except Exception as err:
-            error_rows.append(f"Row {index+1}: {str(err)}")
+                # If record already exists, only update fields with real data
+                if not created:
+                    for field, value in unified_data.items():
+                        if field not in ['load_number'] and value and str(value) not in ['Unknown', 'Unknown Customer', 'Unknown Driver', 'Unknown Vehicle']:
+                            if isinstance(value, (datetime, pd.Timestamp)):
+                                value = make_naive(value)
+                            setattr(existing_record, field, value)
+                    existing_record.save()
+            except Exception as err:
+                error_rows.append(f"Row {index+1}: {str(err)}")
 
     if error_rows:
         print("\n--- Error(s) processing customer timestamps ---")
@@ -636,34 +636,34 @@ def process_distance_info(df, csv_upload):
         current_rows = []
         with transaction.atomic():
             for index, row in df.iterrows():
-            try:
-                # Extract data using unified function with CORRECT file type
-                unified_data = extract_unified_truck_data(row, 'distance_info')
-                unified_data['csv_upload'] = csv_upload
+                try:
+                    # Extract data using unified function with CORRECT file type
+                    unified_data = extract_unified_truck_data(row, 'distance_info')
+                    unified_data['csv_upload'] = csv_upload
 
-                # Always make all datetime fields naive
-                for dt_field in ['dj_departure_time', 'planned_departure_time', 'arrival_at_depot', 'create_date']:
-                    if dt_field in unified_data:
-                        unified_data[dt_field] = make_naive(unified_data[dt_field])
+                    # Always make all datetime fields naive
+                    for dt_field in ['dj_departure_time', 'planned_departure_time', 'arrival_at_depot', 'create_date']:
+                        if dt_field in unified_data:
+                            unified_data[dt_field] = make_naive(unified_data[dt_field])
 
-                # Save the record
-                # We need to be careful not to overwrite everything if we only have distance info
-                # So we use update_or_create but we should probably try to find the existing one first
-                
-                # Check if Load Name exists in unified_data (it should)
-                load_number = unified_data.get('load_number')
-                if not load_number or load_number == 'Unknown':
-                    continue
+                    # Save the record
+                    # We need to be careful not to overwrite everything if we only have distance info
+                    # So we use update_or_create but we should probably try to find the existing one first
+                    
+                    # Check if Load Name exists in unified_data (it should)
+                    load_number = unified_data.get('load_number')
+                    if not load_number or load_number == 'Unknown':
+                        continue
 
-                # Find existing record or create new
-                # Note: creating new might be risky if we don't have enough info, but distance info usually has Load Name
-                TruckPerformanceData.objects.update_or_create(
-                    load_number=load_number,
-                    defaults=unified_data
-                )
-            except Exception as row_e:
-                print(f"Error processing row {index} in distance info: {row_e}")
-                traceback.print_exc()
+                    # Find existing record or create new
+                    # Note: creating new might be risky if we don't have enough info, but distance info usually has Load Name
+                    TruckPerformanceData.objects.update_or_create(
+                        load_number=load_number,
+                        defaults=unified_data
+                    )
+                except Exception as row_e:
+                    print(f"Error processing row {index} in distance info: {row_e}")
+                    traceback.print_exc()
         
         csv_upload.processed = True
         csv_upload.save()
@@ -677,36 +677,37 @@ def process_distance_info(df, csv_upload):
 def process_timestamps_duration(df, csv_upload):
     """Process timestamps and duration CSV file"""
     try:
-        for index, row in df.iterrows():
-            load_number = str(row.get('Load Name', row.get('Load Number', f'LOAD_{index}')))
-            truck_number = str(row.get('Vehicle Reg', row.get('Truck Number', f'TRUCK_{index}')))
-            driver_name = str(row.get('DriverName', row.get('Driver Name', 'Unknown Driver')))
-            customer_name = str(row.get('customer_name', row.get('Customer Name', 'Unknown Customer')))
-            
-            data = {
-                'csv_upload': csv_upload,
-                'create_date': make_naive(pd.to_datetime(row.get('Date', datetime.now().date()))),
-                'month_name': pd.to_datetime(row.get('Date', datetime.now())).strftime('%B'),
-                'transporter': row.get('Transporter', row.get('Depot', 'Unknown')),
-                'load_number': load_number,
-                'mode_of_capture': 'DJ',
-                'driver_name': driver_name,
-                'truck_number': truck_number,
-                'customer_name': customer_name,
-                'dj_departure_time': make_naive(pd.to_datetime(row.get('Departure Time'), errors='coerce')),
-                'arrival_at_depot': make_naive(pd.to_datetime(row.get('Arrival Time'), errors='coerce')),
-                'clock_out': make_naive(pd.to_datetime(row.get('LoadCompleted'), errors='coerce')),
-                'comment_ave_tir': row.get('Duration Notes', ''),
-            }
-            # Make all datetime fields naive
-            for dt_field in ['create_date', 'dj_departure_time', 'arrival_at_depot']:
-                if dt_field in data:
-                    data[dt_field] = make_naive(data[dt_field])
-            TruckPerformanceData.objects.update_or_create(
-                load_number=load_number,
-                truck_number=truck_number,
-                defaults=data
-            )
+        with transaction.atomic():
+            for index, row in df.iterrows():
+                load_number = str(row.get('Load Name', row.get('Load Number', f'LOAD_{index}')))
+                truck_number = str(row.get('Vehicle Reg', row.get('Truck Number', f'TRUCK_{index}')))
+                driver_name = str(row.get('DriverName', row.get('Driver Name', 'Unknown Driver')))
+                customer_name = str(row.get('customer_name', row.get('Customer Name', 'Unknown Customer')))
+                
+                data = {
+                    'csv_upload': csv_upload,
+                    'create_date': make_naive(pd.to_datetime(row.get('Date', datetime.now().date()))),
+                    'month_name': pd.to_datetime(row.get('Date', datetime.now())).strftime('%B'),
+                    'transporter': row.get('Transporter', row.get('Depot', 'Unknown')),
+                    'load_number': load_number,
+                    'mode_of_capture': 'DJ',
+                    'driver_name': driver_name,
+                    'truck_number': truck_number,
+                    'customer_name': customer_name,
+                    'dj_departure_time': make_naive(pd.to_datetime(row.get('Departure Time'), errors='coerce')),
+                    'arrival_at_depot': make_naive(pd.to_datetime(row.get('Arrival Time'), errors='coerce')),
+                    'clock_out': make_naive(pd.to_datetime(row.get('LoadCompleted'), errors='coerce')),
+                    'comment_ave_tir': row.get('Duration Notes', ''),
+                }
+                # Make all datetime fields naive
+                for dt_field in ['create_date', 'dj_departure_time', 'arrival_at_depot']:
+                    if dt_field in data:
+                        data[dt_field] = make_naive(data[dt_field])
+                TruckPerformanceData.objects.update_or_create(
+                    load_number=load_number,
+                    truck_number=truck_number,
+                    defaults=data
+                )
         
         csv_upload.processed = True
         csv_upload.save()
@@ -720,34 +721,35 @@ def process_timestamps_duration(df, csv_upload):
 def process_avg_time_route(df, csv_upload):
     """Process average time in route CSV file"""
     try:
-        for index, row in df.iterrows():
-            load_number = str(row.get('Load Name', row.get('Load Number', f'LOAD_{index}')))
-            truck_number = str(row.get('Vehicle Reg', row.get('Truck Number', f'TRUCK_{index}')))
-            driver_name = str(row.get('DriverName', row.get('Driver Name', 'Unknown Driver')))
-            customer_name = str(row.get('customer_name', row.get('Customer Name', 'Unknown Customer')))
-            
-            data = {
-                'csv_upload': csv_upload,
-                'create_date': make_naive(pd.to_datetime(row.get('Date', datetime.now().date()))),
-                'month_name': pd.to_datetime(row.get('Date', datetime.now())).strftime('%B'),
-                'transporter': row.get('Transporter', row.get('Depot', 'Unknown')),
-                'load_number': load_number,
-                'mode_of_capture': 'Average Time',
-                'driver_name': row.get('Driver Name', 'Unknown Driver'),
-                'truck_number': truck_number,
-                'customer_name': row.get('Customer Name', 'Unknown Customer'),
-                'ave_arrival_time': make_naive(pd.to_datetime(row.get('Average Arrival Time'), errors='coerce')),
-                'comment_ave_tir': row.get('Time Comments', ''),
-            }
-            # Make all datetime fields naive
-            for dt_field in ['create_date', 'ave_arrival_time']:
-                if dt_field in data:
-                    data[dt_field] = make_naive(data[dt_field])
-            TruckPerformanceData.objects.update_or_create(
-                load_number=load_number,
-                truck_number=truck_number,
-                defaults=data
-            )
+        with transaction.atomic():
+            for index, row in df.iterrows():
+                load_number = str(row.get('Load Name', row.get('Load Number', f'LOAD_{index}')))
+                truck_number = str(row.get('Vehicle Reg', row.get('Truck Number', f'TRUCK_{index}')))
+                driver_name = str(row.get('DriverName', row.get('Driver Name', 'Unknown Driver')))
+                customer_name = str(row.get('customer_name', row.get('Customer Name', 'Unknown Customer')))
+                
+                data = {
+                    'csv_upload': csv_upload,
+                    'create_date': make_naive(pd.to_datetime(row.get('Date', datetime.now().date()))),
+                    'month_name': pd.to_datetime(row.get('Date', datetime.now())).strftime('%B'),
+                    'transporter': row.get('Transporter', row.get('Depot', 'Unknown')),
+                    'load_number': load_number,
+                    'mode_of_capture': 'Average Time',
+                    'driver_name': row.get('Driver Name', 'Unknown Driver'),
+                    'truck_number': truck_number,
+                    'customer_name': row.get('Customer Name', 'Unknown Customer'),
+                    'ave_arrival_time': make_naive(pd.to_datetime(row.get('Average Arrival Time'), errors='coerce')),
+                    'comment_ave_tir': row.get('Time Comments', ''),
+                }
+                # Make all datetime fields naive
+                for dt_field in ['create_date', 'ave_arrival_time']:
+                    if dt_field in data:
+                        data[dt_field] = make_naive(data[dt_field])
+                TruckPerformanceData.objects.update_or_create(
+                    load_number=load_number,
+                    truck_number=truck_number,
+                    defaults=data
+                )
         
         csv_upload.processed = True
         csv_upload.save()
@@ -761,35 +763,36 @@ def process_avg_time_route(df, csv_upload):
 def process_time_route_info(df, csv_upload):
     """Process time in route information CSV file"""
     try:
-        for index, row in df.iterrows():
-            load_number = str(row.get('Load Name', row.get('Load Number', f'LOAD_{index}')))
-            truck_number = str(row.get('Vehicle Reg', row.get('Truck Number', f'TRUCK_{index}')))
-            driver_name = str(row.get('DriverName', row.get('Driver Name', 'Unknown Driver')))
-            customer_name = str(row.get('customer_name', row.get('Customer Name', 'Unknown Customer')))
-            
-            data = {
-                'csv_upload': csv_upload,
-                'create_date': make_naive(pd.to_datetime(row.get('Date', datetime.now().date()))),
-                'month_name': pd.to_datetime(row.get('Date', datetime.now())).strftime('%B'),
-                'transporter': row.get('Transporter', row.get('Depot', 'Unknown')),
-                'load_number': load_number,
-                'mode_of_capture': 'DJ',
-                'driver_name': driver_name,
-                'truck_number': truck_number,
-                'customer_name': customer_name,
-                'dj_departure_time': make_naive(pd.to_datetime(row.get('Route Start Time'), errors='coerce')),
-                'arrival_at_depot': make_naive(pd.to_datetime(row.get('Route End Time'), errors='coerce')),
-                'comment_ave_tir': row.get('Route Comments', ''),
-            }
-            # Make all datetime fields naive
-            for dt_field in ['create_date', 'dj_departure_time', 'arrival_at_depot']:
-                if dt_field in data:
-                    data[dt_field] = make_naive(data[dt_field])
-            TruckPerformanceData.objects.update_or_create(
-                load_number=load_number,
-                truck_number=truck_number,
-                defaults=data
-            )
+        with transaction.atomic():
+            for index, row in df.iterrows():
+                load_number = str(row.get('Load Name', row.get('Load Number', f'LOAD_{index}')))
+                truck_number = str(row.get('Vehicle Reg', row.get('Truck Number', f'TRUCK_{index}')))
+                driver_name = str(row.get('DriverName', row.get('Driver Name', 'Unknown Driver')))
+                customer_name = str(row.get('customer_name', row.get('Customer Name', 'Unknown Customer')))
+                
+                data = {
+                    'csv_upload': csv_upload,
+                    'create_date': make_naive(pd.to_datetime(row.get('Date', datetime.now().date()))),
+                    'month_name': pd.to_datetime(row.get('Date', datetime.now())).strftime('%B'),
+                    'transporter': row.get('Transporter', row.get('Depot', 'Unknown')),
+                    'load_number': load_number,
+                    'mode_of_capture': 'DJ',
+                    'driver_name': driver_name,
+                    'truck_number': truck_number,
+                    'customer_name': customer_name,
+                    'dj_departure_time': make_naive(pd.to_datetime(row.get('Route Start Time'), errors='coerce')),
+                    'arrival_at_depot': make_naive(pd.to_datetime(row.get('Route End Time'), errors='coerce')),
+                    'comment_ave_tir': row.get('Route Comments', ''),
+                }
+                # Make all datetime fields naive
+                for dt_field in ['create_date', 'dj_departure_time', 'arrival_at_depot']:
+                    if dt_field in data:
+                        data[dt_field] = make_naive(data[dt_field])
+                TruckPerformanceData.objects.update_or_create(
+                    load_number=load_number,
+                    truck_number=truck_number,
+                    defaults=data
+                )
         
         csv_upload.processed = True
         csv_upload.save()
@@ -803,31 +806,32 @@ def process_time_route_info(df, csv_upload):
 def process_generic_csv(df, csv_upload):
     """Process generic CSV file with best-effort field mapping"""
     try:
-        for index, row in df.iterrows():
-            # Try to extract common fields - prioritize actual column names from uploads
-            load_number = str(row.get('load_name', row.get('Load Name', row.get('Load Number', row.get('Load', row.get('ID', f'LOAD_{index}'))))))
-            truck_number = str(row.get('Vehicle Reg', row.get('Truck Number', row.get('Vehicle', row.get('Truck', f'TRUCK_{index}')))))
-            driver_name = str(row.get('DriverName', row.get('Driver Name', row.get('Driver', 'Unknown Driver'))))
-            customer_name = str(row.get('customer_name', row.get('Customer Name', row.get('Customer', 'Unknown Customer'))))
-            
-            data = {
-                'csv_upload': csv_upload,
-                'create_date': pd.to_datetime(row.get('schedule_date', row.get('Create Date', row.get('Date', datetime.now().date())))).date(),
-                'month_name': pd.to_datetime(row.get('schedule_date', row.get('Create Date', row.get('Date', datetime.now())))).strftime('%B'),
-                'transporter': row.get('Transporter', row.get('Depot', row.get('Company', 'Unknown'))),
-                'load_number': load_number,
-                'mode_of_capture': 'DJ',
-                'driver_name': driver_name,
-                'truck_number': truck_number,
-                'customer_name': customer_name,
-                'comment_ave_tir': str(row.get('Comments', row.get('Notes', ''))),
-            }
-            
-            TruckPerformanceData.objects.update_or_create(
-                load_number=load_number,
-                truck_number=truck_number,
-                defaults=data
-            )
+        with transaction.atomic():
+            for index, row in df.iterrows():
+                # Try to extract common fields - prioritize actual column names from uploads
+                load_number = str(row.get('load_name', row.get('Load Name', row.get('Load Number', row.get('Load', row.get('ID', f'LOAD_{index}'))))))
+                truck_number = str(row.get('Vehicle Reg', row.get('Truck Number', row.get('Vehicle', row.get('Truck', f'TRUCK_{index}')))))
+                driver_name = str(row.get('DriverName', row.get('Driver Name', row.get('Driver', 'Unknown Driver'))))
+                customer_name = str(row.get('customer_name', row.get('Customer Name', row.get('Customer', 'Unknown Customer'))))
+                
+                data = {
+                    'csv_upload': csv_upload,
+                    'create_date': pd.to_datetime(row.get('schedule_date', row.get('Create Date', row.get('Date', datetime.now().date())))).date(),
+                    'month_name': pd.to_datetime(row.get('schedule_date', row.get('Create Date', row.get('Date', datetime.now())))).strftime('%B'),
+                    'transporter': row.get('Transporter', row.get('Depot', row.get('Company', 'Unknown'))),
+                    'load_number': load_number,
+                    'mode_of_capture': 'DJ',
+                    'driver_name': driver_name,
+                    'truck_number': truck_number,
+                    'customer_name': customer_name,
+                    'comment_ave_tir': str(row.get('Comments', row.get('Notes', ''))),
+                }
+                
+                TruckPerformanceData.objects.update_or_create(
+                    load_number=load_number,
+                    truck_number=truck_number,
+                    defaults=data
+                )
         
         csv_upload.processed = True
         csv_upload.save()
