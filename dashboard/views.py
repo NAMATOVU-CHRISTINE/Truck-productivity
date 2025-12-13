@@ -711,10 +711,10 @@ def process_timestamps_duration(df, csv_upload):
     try:
         with transaction.atomic():
             for index, row in df.iterrows():
-                load_number = str(row.get('Load Name', row.get('Load Number', f'LOAD_{index}')))
-                truck_number = str(row.get('Vehicle Reg', row.get('Truck Number', f'TRUCK_{index}')))
-                driver_name = str(row.get('DriverName', row.get('Driver Name', 'Unknown Driver')))
-                customer_name = str(row.get('customer_name', row.get('Customer Name', 'Unknown Customer')))
+                load_number = str(get_fuzzy(row, ['Load Number', 'Load Name', 'Load'], 'Unknown'))
+                truck_number = str(get_fuzzy(row, ['Vehicle Reg', 'Truck Number', 'Vehicle'], 'Unknown'))
+                driver_name = str(get_fuzzy(row, ['Driver Name', 'DriverName', 'Driver'], 'Unknown Driver'))
+                customer_name = str(get_fuzzy(row, ['Customer Name', 'customer_name', 'Customer'], 'Unknown Customer'))
                 
                 data = {
                     'csv_upload': csv_upload,
@@ -755,10 +755,10 @@ def process_avg_time_route(df, csv_upload):
     try:
         with transaction.atomic():
             for index, row in df.iterrows():
-                load_number = str(row.get('Load Name', row.get('Load Number', f'LOAD_{index}')))
-                truck_number = str(row.get('Vehicle Reg', row.get('Truck Number', f'TRUCK_{index}')))
-                driver_name = str(row.get('DriverName', row.get('Driver Name', 'Unknown Driver')))
-                customer_name = str(row.get('customer_name', row.get('Customer Name', 'Unknown Customer')))
+                load_number = str(get_fuzzy(row, ['Load Number', 'Load Name', 'Load'], 'Unknown'))
+                truck_number = str(get_fuzzy(row, ['Vehicle Reg', 'Truck Number', 'Vehicle'], 'Unknown'))
+                driver_name = str(get_fuzzy(row, ['Driver Name', 'DriverName', 'Driver'], 'Unknown Driver'))
+                customer_name = str(get_fuzzy(row, ['Customer Name', 'customer_name', 'Customer'], 'Unknown Customer'))
                 
                 data = {
                     'csv_upload': csv_upload,
@@ -797,10 +797,10 @@ def process_time_route_info(df, csv_upload):
     try:
         with transaction.atomic():
             for index, row in df.iterrows():
-                load_number = str(row.get('Load Name', row.get('Load Number', f'LOAD_{index}')))
-                truck_number = str(row.get('Vehicle Reg', row.get('Truck Number', f'TRUCK_{index}')))
-                driver_name = str(row.get('DriverName', row.get('Driver Name', 'Unknown Driver')))
-                customer_name = str(row.get('customer_name', row.get('Customer Name', 'Unknown Customer')))
+                load_number = str(get_fuzzy(row, ['Load Number', 'Load Name', 'Load'], 'Unknown'))
+                truck_number = str(get_fuzzy(row, ['Vehicle Reg', 'Truck Number', 'Vehicle'], 'Unknown'))
+                driver_name = str(get_fuzzy(row, ['Driver Name', 'DriverName', 'Driver'], 'Unknown Driver'))
+                customer_name = str(get_fuzzy(row, ['Customer Name', 'customer_name', 'Customer'], 'Unknown Customer'))
                 
                 data = {
                     'csv_upload': csv_upload,
@@ -841,10 +841,10 @@ def process_generic_csv(df, csv_upload):
         with transaction.atomic():
             for index, row in df.iterrows():
                 # Try to extract common fields - prioritize actual column names from uploads
-                load_number = str(row.get('load_name', row.get('Load Name', row.get('Load Number', row.get('Load', row.get('ID', f'LOAD_{index}'))))))
-                truck_number = str(row.get('Vehicle Reg', row.get('Truck Number', row.get('Vehicle', row.get('Truck', f'TRUCK_{index}')))))
-                driver_name = str(row.get('DriverName', row.get('Driver Name', row.get('Driver', 'Unknown Driver'))))
-                customer_name = str(row.get('customer_name', row.get('Customer Name', row.get('Customer', 'Unknown Customer'))))
+                load_number = str(get_fuzzy(row, ['Load Number', 'Load Name', 'Load Name 1', 'Load', 'ID'], 'Unknown'))
+                truck_number = str(get_fuzzy(row, ['Vehicle Reg', 'Truck Number', 'Vehicle', 'Truck'], 'Unknown'))
+                driver_name = str(get_fuzzy(row, ['Driver Name', 'DriverName', 'Driver'], 'Unknown Driver'))
+                customer_name = str(get_fuzzy(row, ['Customer Name', 'customer_name', 'Customer'], 'Unknown Customer'))
                 
                 data = {
                     'csv_upload': csv_upload,
