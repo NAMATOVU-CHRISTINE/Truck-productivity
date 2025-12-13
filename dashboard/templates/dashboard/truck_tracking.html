@@ -1,0 +1,308 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Truck Tracking - Truck Productivity Dashboard{% endblock %}
+{% block header_title %}Truck Progress Tracking{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <h2 class="fw-bold mb-1">
+            <i class="fas fa-truck-moving text-primary me-2"></i>Live Truck Tracking
+        </h2>
+        <p class="text-muted mb-0">Monitor real-time truck progress and delivery status</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+        <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill">
+            <i class="fas fa-truck me-1"></i>{{ total_trucks }} Total
+        </span>
+        <button class="btn btn-outline-primary rounded-pill" onclick="window.location.reload()">
+            <i class="fas fa-sync-alt me-1"></i>Refresh
+        </button>
+    </div>
+</div>
+
+<!-- Stats Row -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center">
+                <div class="rounded-circle bg-primary bg-opacity-10 p-3 me-3">
+                    <i class="fas fa-truck-moving fa-2x text-primary"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-bold text-uppercase">Active Trucks</div>
+                    <div class="fs-3 fw-bold">{{ active_trucks.count }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center">
+                <div class="rounded-circle bg-success bg-opacity-10 p-3 me-3">
+                    <i class="fas fa-check-circle fa-2x text-success"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-bold text-uppercase">Completed</div>
+                    <div class="fs-3 fw-bold">{{ completed_trucks.count }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center">
+                <form method="GET" class="d-flex gap-2 w-100">
+                    <input type="text" class="form-control" name="search" placeholder="Search trucks, drivers..."
+                        value="{{ search_query }}">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search Results Info -->
+{% if search_query %}
+<div class="alert alert-info d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <i class="fas fa-search me-2"></i>
+        Showing results for: <strong>"{{ search_query }}"</strong>
+    </div>
+    <a href="{% url 'dashboard:truck_tracking' %}" class="btn btn-sm btn-outline-info">
+        <i class="fas fa-times me-1"></i>Clear
+    </a>
+</div>
+{% endif %}
+
+<!-- Active Trucks Section -->
+<div class="card mb-4 border-0 shadow-sm">
+    <div class="card-header border-0 bg-transparent py-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <h5 class="mb-0 fw-bold">
+                <i class="fas fa-truck text-primary me-2"></i>Active Trucks ({{ active_trucks.count }})
+            </h5>
+            <div class="btn-group shadow-sm">
+                <button type="button" class="btn btn-sm btn-primary view-toggle active" data-view="cards">
+                    <i class="fas fa-th-large me-1"></i>Cards
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary view-toggle" data-view="table">
+                    <i class="fas fa-table me-1"></i>Table
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <!-- Cards View -->
+        <div id="cardsView" class="row g-3">
+            {% for truck in active_trucks %}
+            <div class="col-xl-3 col-lg-4 col-md-6">
+                <div class="card h-100 border shadow-sm truck-card hover-lift">
+                    <div class="card-body p-3 d-flex flex-column h-100">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h6 class="fw-bold text-primary mb-1 text-truncate" title="{{ truck.load_number }}">
+                                        {{ truck.load_number }}
+                                    </h6>
+                                    <span class="badge bg-light text-dark border text-truncate"
+                                        style="max-width: 100px;">
+                                        {{ truck.truck_number }}
+                                    </span>
+                                </div>
+                                <span
+                                    class="badge {% if truck.current_status == 'completed' %}bg-success{% elif truck.current_status == 'delayed' %}bg-danger{% elif truck.current_status == 'in_transit' %}bg-primary{% else %}bg-info{% endif %} rounded-pill text-wrap text-center"
+                                    style="font-size: 0.65rem; max-width: 80px; line-height: 1.2;">
+                                    {{ truck.status_display }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3 small">
+                            <div class="d-flex align-items-center mb-1 text-muted">
+                                <i class="fas fa-user me-2" style="width: 14px;"></i>
+                                <span class="text-truncate">{{ truck.driver_name|default:"Unknown" }}</span>
+                            </div>
+                            <div class="d-flex align-items-center text-muted">
+                                <i class="fas fa-building me-2" style="width: 14px;"></i>
+                                <span class="text-truncate">{{ truck.customer_name|default:"Unknown" }}</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-end mb-1">
+                                <small class="text-muted fw-bold" style="font-size: 0.75rem;">Progress</small>
+                                <small class="fw-bold text-primary">{{ truck.progress_percentage|default:0 }}%</small>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar {% if truck.progress_percentage == 100 %}bg-success{% else %}bg-primary{% endif %}"
+                                    role="progressbar" style="width: {{ truck.progress_percentage|default:0 }}%"></div>
+                            </div>
+
+                            <a href="{% url 'dashboard:truck_detail_tracking' truck.id %}"
+                                class="btn btn-outline-primary btn-sm w-100 mt-3 py-1" style="font-size: 0.85rem;">
+                                <i class="fas fa-eye me-1"></i>View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-truck-loading fa-3x text-muted mb-3 d-block"></i>
+                <h5 class="text-muted">No active trucks found</h5>
+                {% if search_query %}
+                <p class="text-muted">Try adjusting your search criteria</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Table View (hidden by default) -->
+        <div id="tableView" class="d-none">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 text-nowrap">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Load Number</th>
+                            <th>Truck</th>
+                            <th>Driver</th>
+                            <th>Customer</th>
+                            <th>Status</th>
+                            <th>Progress</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for truck in active_trucks %}
+                        <tr>
+                            <td>
+                                <span class="fw-bold text-primary">{{ truck.load_number }}</span>
+                            </td>
+                            <td><span class="badge bg-light text-dark border">{{ truck.truck_number }}</span></td>
+                            <td>
+                                <div class="text-truncate" style="max-width: 150px;" title="{{ truck.driver_name }}">
+                                    {{ truck.driver_name|default:"Unknown" }}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="text-truncate" style="max-width: 150px;" title="{{ truck.customer_name }}">
+                                    {{ truck.customer_name|default:"Unknown" }}
+                                </div>
+                            </td>
+                            <td>
+                                <span
+                                    class="badge {% if truck.current_status == 'completed' %}bg-success{% elif truck.current_status == 'delayed' %}bg-danger{% elif truck.current_status == 'in_transit' %}bg-primary{% else %}bg-info{% endif %} rounded-pill">
+                                    {{ truck.status_display }}
+                                </span>
+                            </td>
+                            <td style="min-width: 120px;">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress flex-grow-1" style="height: 6px;">
+                                        <div class="progress-bar {% if truck.progress_percentage == 100 %}bg-success{% else %}bg-primary{% endif %}"
+                                            style="width: {{ truck.progress_percentage|default:0 }}%"></div>
+                                    </div>
+                                    <small class="fw-bold" style="width: 35px;">{{ truck.progress_percentage|default:0
+                                        }}%</small>
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'dashboard:truck_detail_tracking' truck.id %}"
+                                    class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">No active trucks found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Completed Trucks Section -->
+{% if completed_trucks %}
+<div class="card">
+    <div class="card-header border-0 bg-transparent py-3">
+        <h5 class="mb-0 fw-bold">
+            <i class="fas fa-check-circle text-success me-2"></i>Recently Completed ({{ completed_trucks.count }})
+        </h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Load Number</th>
+                        <th>Driver</th>
+                        <th>Customer</th>
+                        <th>Completed At</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for truck in completed_trucks %}
+                    <tr>
+                        <td><strong>{{ truck.load_number }}</strong></td>
+                        <td>{{ truck.driver_name|default:"Unknown" }}</td>
+                        <td>{{ truck.customer_name|default:"Unknown" }}</td>
+                        <td>
+                            {% if truck.arrival_at_depot %}
+                            {{ truck.arrival_at_depot|date:"M d, Y H:i" }}
+                            {% else %}
+                            <span class="text-muted">Not recorded</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'dashboard:truck_detail_tracking' truck.id %}"
+                                class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // View toggle
+        const viewToggles = document.querySelectorAll('.view-toggle');
+        const cardsView = document.getElementById('cardsView');
+        const tableView = document.getElementById('tableView');
+
+        viewToggles.forEach(toggle => {
+            toggle.addEventListener('click', function () {
+                viewToggles.forEach(btn => {
+                    btn.classList.remove('active', 'btn-primary');
+                    btn.classList.add('btn-outline-primary');
+                });
+                this.classList.add('active', 'btn-primary');
+                this.classList.remove('btn-outline-primary');
+
+                if (this.dataset.view === 'cards') {
+                    cardsView.classList.remove('d-none');
+                    tableView.classList.add('d-none');
+                } else {
+                    cardsView.classList.add('d-none');
+                    tableView.classList.remove('d-none');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

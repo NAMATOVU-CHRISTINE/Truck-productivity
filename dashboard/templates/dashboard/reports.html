@@ -1,0 +1,14 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}Export Report{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <h2 class="mb-4">Export Truck Productivity Report</h2>
+            <a href="{% url 'dashboard:export_excel' %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-file-excel me-2"></i>Download Excel Report
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

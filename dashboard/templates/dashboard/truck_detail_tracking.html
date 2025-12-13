@@ -1,0 +1,154 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Truck {{ truck.load_number }} Tracking - Truck Productivity Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <h2 class="mb-0"><i class="fas fa-route me-2"></i>Tracking: {{ truck.load_number }}</h2>
+    <a href="{% url 'dashboard:truck_tracking' %}" class="btn btn-outline-primary text-nowrap">
+        <i class="fas fa-arrow-left me-2"></i>Back to Tracking
+    </a>
+</div>
+
+<!-- Truck Information Card -->
+<div class="row mb-4">
+    <div class="col-lg-8 mb-4 mb-lg-0">
+        <div class="card h-100">
+            <div class="card-header border-0 bg-transparent py-3">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-info-circle me-2 text-primary"></i>Journey Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <p class="mb-2"><strong>Load Number:</strong> {{ truck.load_number }}</p>
+                        <p class="mb-2"><strong>Driver:</strong> {{ truck.driver_name }}</p>
+                        <p class="mb-2"><strong>Truck Number:</strong> {{ truck.truck_number }}</p>
+                        <p class="mb-0"><strong>Transporter:</strong> {{ truck.transporter }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-2"><strong>Customer:</strong> {{ truck.customer_name }}</p>
+                        <p class="mb-2"><strong>Journey Date:</strong> {{ truck.create_date|date:"M d, Y" }}</p>
+                        <p class="mb-2"><strong>Total Distance:</strong>
+                            {% if truck.total_distance %}
+                            {{ truck.total_distance|floatformat:2 }} km
+                            {% else %}
+                            <span class="text-muted">Not calculated</span>
+                            {% endif %}
+                        </p>
+                        <p class="mb-0"><strong>Efficiency:</strong>
+                            {% if truck.efficiency_score %}
+                            <span class="badge bg-info">{{ truck.efficiency_score|floatformat:2 }} km/h</span>
+                            {% else %}
+                            <span class="text-muted">Not calculated</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header border-0 bg-transparent py-3">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-tachometer-alt me-2 text-success"></i>Progress</h5>
+            </div>
+            <div class="card-body text-center d-flex flex-column justify-content-center align-items-center">
+                <div class="progress-circle mb-3"
+                    style="background: conic-gradient(var(--primary-color) {{ progress_percentage }}%, var(--bg-light) 0%);">
+                    <div class="progress-circle-inner">
+                        <div class="progress-circle-value">{{ progress_percentage }}%</div>
+                        <div class="progress-circle-label">Complete</div>
+                    </div>
+                </div>
+                <h6 class="mb-0 fw-bold">{{ truck.get_current_status_display }}</h6>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Timeline -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header border-0 bg-transparent py-3">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-route me-2 text-info"></i>Journey Timeline</h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    {% for step in progress_steps %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker 
+                                {% if step.completed %}bg-success
+                                {% elif step.active %}bg-primary
+                                {% else %}bg-light{% endif %}">
+                            <i class="{{ step.icon }} 
+                                    {% if step.completed %}text-white
+                                    {% elif step.active %}text-white
+                                    {% else %}text-muted{% endif %}"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1 fw-bold
+                                    {% if step.completed %}text-success
+                                    {% elif step.active %}text-primary
+                                    {% else %}text-muted{% endif %}">
+                                {{ step.name }}
+                                {% if step.completed %}
+                                <i class="fas fa-check-circle text-success ms-2"></i>
+                                {% elif step.active %}
+                                <i class="fas fa-spinner fa-spin text-primary ms-2"></i>
+                                {% endif %}
+                            </h6>
+                            {% if step.timestamp %}
+                            <small class="text-muted d-block">{{ step.timestamp|date:"M d, Y H:i" }}</small>
+                            {% elif step.completed %}
+                            <small class="text-success d-block">Completed</small>
+                            {% elif step.active %}
+                            <small class="text-primary d-block">In Progress</small>
+                            {% else %}
+                            <small class="text-muted d-block">Pending</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Details -->
+{% if truck.comment_tat or truck.comment_ave_departure or truck.comment_ave_tir %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header border-0 bg-transparent py-3">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-comment me-2 text-warning"></i>Comments & Notes</h5>
+            </div>
+            <div class="card-body">
+                {% if truck.comment_ave_departure %}
+                <div class="mb-3">
+                    <strong>Departure Comment:</strong>
+                    <p class="text-muted mb-0">{{ truck.comment_ave_departure }}</p>
+                </div>
+                {% endif %}
+                {% if truck.comment_tat %}
+                <div class="mb-3">
+                    <strong>Turn Around Time Comment:</strong>
+                    <p class="text-muted mb-0">{{ truck.comment_tat }}</p>
+                </div>
+                {% endif %}
+                {% if truck.comment_ave_tir %}
+                <div class="mb-3">
+                    <strong>TIR Comment:</strong>
+                    <p class="text-muted mb-0">{{ truck.comment_ave_tir }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

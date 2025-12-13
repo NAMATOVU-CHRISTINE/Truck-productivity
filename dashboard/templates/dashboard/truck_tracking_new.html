@@ -1,0 +1,453 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Truck Tracking - Truck Productivity Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-search me-2"></i>Search & Filter</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Search Form -->
+                    <form method="GET" class="mb-3">
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="search" 
+                                   placeholder="Search trucks, drivers, customers..." 
+                                   value="{{ search_query }}" id="searchInput">
+                            <button class="btn btn-outline-primary" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Quick Stats -->
+                    <div class="mb-3">
+                        <h6 class="text-muted">Quick Stats</h6>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="text-center p-2 bg-light rounded">
+                                    <div class="fw-bold text-primary">{{ active_trucks.count }}</div>
+                                    <small class="text-muted">Active</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-center p-2 bg-light rounded">
+                                    <div class="fw-bold text-success">{{ completed_trucks.count }}</div>
+                                    <small class="text-muted">Completed</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Status Filter Buttons -->
+                    <div class="mb-3">
+                        <h6 class="text-muted">Filter by Status</h6>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-secondary btn-sm status-filter active" data-status="all">
+                                <i class="fas fa-list me-1"></i>All Trucks
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm status-filter" data-status="pending_departure">
+                                <i class="fas fa-clock me-1"></i>Pending
+                            </button>
+                            <button class="btn btn-outline-info btn-sm status-filter" data-status="in_transit">
+                                <i class="fas fa-truck me-1"></i>In Transit
+                            </button>
+                            <button class="btn btn-outline-warning btn-sm status-filter" data-status="at_customer">
+                                <i class="fas fa-map-marker-alt me-1"></i>At Customer
+                            </button>
+                            <button class="btn btn-outline-success btn-sm status-filter" data-status="journey_completed">
+                                <i class="fas fa-check-circle me-1"></i>Completed
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Refresh Button -->
+                    <div class="d-grid">
+                        <button class="btn btn-success" onclick="refreshPage()">
+                            <i class="fas fa-sync-alt me-1"></i>Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-truck-moving me-2"></i>Truck Progress Tracking</h2>
+                <div>
+                    <span class="badge bg-primary me-2">Total: {{ total_trucks }}</span>
+                    <a href="{% url 'dashboard:dashboard' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+
+            <!-- Auto-refresh indicator -->
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Live Tracking:</strong> This page auto-refreshes every 30 seconds to show real-time updates.
+                <div class="float-end">
+                    <small>Last updated: <span id="lastUpdated"></span></small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Search Results Info -->
+            {% if search_query %}
+            <div class="alert alert-secondary">
+                <i class="fas fa-search me-2"></i>Showing results for: <strong>"{{ search_query }}"</strong>
+                <a href="{% url 'dashboard:tracking' %}" class="btn btn-sm btn-outline-secondary ms-2">Clear Search</a>
+            </div>
+            {% endif %}
+
+            <!-- Active Trucks Section -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white d-flex justify-content-between">
+                            <h5 class="mb-0"><i class="fas fa-truck me-2"></i>Active Trucks ({{ active_trucks.count }})</h5>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-light view-toggle active" data-view="cards">
+                                    <i class="fas fa-th-large"></i> Cards
+                                </button>
+                                <button type="button" class="btn btn-outline-light view-toggle" data-view="table">
+                                    <i class="fas fa-table"></i> Table
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body" id="activetrucksContainer">
+                            <!-- Cards View -->
+                            <div id="cardsView" class="row">
+                                {% for truck in active_trucks %}
+                                <div class="col-md-6 col-lg-4 mb-3 truck-card" data-status="{{ truck.current_status }}">
+                                    <div class="card border-left-primary shadow-sm h-100">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <h6 class="text-primary mb-0">{{ truck.load_number }}</h6>
+                                                <span class="badge bg-primary status-badge">{{ truck.status_display }}</span>
+                                            </div>
+                                            
+                                            <div class="mb-2">
+                                                <small class="text-muted d-block">{{ truck.truck_id }}</small>
+                                                <strong>Driver:</strong> {{ truck.driver_name|default:"Unknown Driver" }}<br>
+                                                <strong>Customer:</strong> {{ truck.customer_name|default:"Unknown Customer" }}
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <div class="d-flex justify-content-between mb-1">
+                                                    <small>Progress</small>
+                                                    <small>{{ truck.progress_percentage }}%</small>
+                                                </div>
+                                                <div class="progress" style="height: 8px;">
+                                                    <div class="progress-bar bg-gradient" role="progressbar" 
+                                                         style="width: {{ truck.progress_percentage }}%"></div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Progress Steps -->
+                                            <div class="mb-3">
+                                                <div class="d-flex justify-content-between text-center">
+                                                    <div class="step {% if truck.progress_percentage >= 0 %}active{% endif %}">
+                                                        <i class="fas fa-clock"></i>
+                                                    </div>
+                                                    <div class="step {% if truck.progress_percentage >= 25 %}active{% endif %}">
+                                                        <i class="fas fa-truck"></i>
+                                                    </div>
+                                                    <div class="step {% if truck.progress_percentage >= 50 %}active{% endif %}">
+                                                        <i class="fas fa-route"></i>
+                                                    </div>
+                                                    <div class="step {% if truck.progress_percentage >= 75 %}active{% endif %}">
+                                                        <i class="fas fa-map-marker-alt"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <a href="{% url 'dashboard:truck_detail_tracking' truck.id %}" class="btn btn-sm btn-outline-primary w-100">
+                                                <i class="fas fa-eye me-1"></i>View Details
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <div class="col-12 text-center py-4">
+                                    <i class="fas fa-truck-loading fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">No active trucks found</h5>
+                                    {% if search_query %}
+                                    <p class="text-muted">Try adjusting your search criteria</p>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Table View -->
+                            <div id="tableView" class="d-none">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Load Number</th>
+                                                <th>Truck ID</th>
+                                                <th>Driver</th>
+                                                <th>Customer</th>
+                                                <th>Status</th>
+                                                <th>Progress</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for truck in active_trucks %}
+                                            <tr class="truck-row" data-status="{{ truck.current_status }}">
+                                                <td><strong>{{ truck.load_number }}</strong></td>
+                                                <td>{{ truck.truck_id }}</td>
+                                                <td>{{ truck.driver_name|default:"Unknown" }}</td>
+                                                <td>{{ truck.customer_name|default:"Unknown" }}</td>
+                                                <td>
+                                                    <span class="badge bg-primary">{{ truck.status_display }}</span>
+                                                </td>
+                                                <td>
+                                                    <div class="progress" style="width: 100px; height: 6px;">
+                                                        <div class="progress-bar" role="progressbar" 
+                                                             style="width: {{ truck.progress_percentage }}%"></div>
+                                                    </div>
+                                                    <small>{{ truck.progress_percentage }}%</small>
+                                                </td>
+                                                <td>
+                                                    <a href="{% url 'dashboard:truck_detail_tracking' truck.id %}" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            {% empty %}
+                                            <tr>
+                                                <td colspan="7" class="text-center py-4">
+                                                    <i class="fas fa-truck-loading fa-2x text-muted mb-2"></i>
+                                                    <div class="text-muted">No active trucks found</div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recently Completed Trucks -->
+            {% if completed_trucks %}
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="fas fa-check-circle me-2"></i>Recently Completed ({{ completed_trucks.count }})</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Load Number</th>
+                                            <th>Driver</th>
+                                            <th>Customer</th>
+                                            <th>Completed At</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for truck in completed_trucks %}
+                                        <tr>
+                                            <td><strong>{{ truck.load_number }}</strong></td>
+                                            <td>{{ truck.driver_name|default:"Unknown" }}</td>
+                                            <td>{{ truck.customer_name|default:"Unknown" }}</td>
+                                            <td>
+                                                {% if truck.arrival_at_depot %}
+                                                    {{ truck.arrival_at_depot|date:"M d, Y H:i" }}
+                                                {% else %}
+                                                    <span class="text-muted">Not recorded</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'dashboard:truck_detail_tracking' truck.id %}" class="btn btn-sm btn-outline-success">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.border-left-primary {
+    border-left: 4px solid #007bff !important;
+}
+
+.step {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background-color: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    font-size: 12px;
+}
+
+.step.active {
+    background-color: #007bff;
+    color: white;
+}
+
+.truck-card {
+    transition: transform 0.2s;
+}
+
+.truck-card:hover {
+    transform: translateY(-2px);
+}
+
+.status-badge {
+    font-size: 0.7em;
+}
+
+.sticky-top {
+    z-index: 1020;
+}
+
+.status-filter.active {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: white;
+}
+</style>
+
+<script>
+// Auto-refresh functionality
+let refreshInterval;
+
+function startAutoRefresh() {
+    refreshInterval = setInterval(() => {
+        window.location.reload();
+    }, 30000); // Refresh every 30 seconds
+}
+
+function stopAutoRefresh() {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+    }
+}
+
+function refreshPage() {
+    window.location.reload();
+}
+
+// Update last updated time
+function updateLastUpdated() {
+    document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+}
+
+// View toggle functionality
+document.addEventListener('DOMContentLoaded', function() {
+    updateLastUpdated();
+    startAutoRefresh();
+    
+    // View toggle buttons
+    const viewToggles = document.querySelectorAll('.view-toggle');
+    const cardsView = document.getElementById('cardsView');
+    const tableView = document.getElementById('tableView');
+    
+    viewToggles.forEach(toggle => {
+        toggle.addEventListener('click', function() {
+            const view = this.dataset.view;
+            
+            // Update button states
+            viewToggles.forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.add('btn-outline-light');
+                btn.classList.remove('btn-light');
+            });
+            
+            this.classList.add('active');
+            this.classList.remove('btn-outline-light');
+            this.classList.add('btn-light');
+            
+            // Show/hide views
+            if (view === 'cards') {
+                cardsView.classList.remove('d-none');
+                tableView.classList.add('d-none');
+            } else {
+                cardsView.classList.add('d-none');
+                tableView.classList.remove('d-none');
+            }
+        });
+    });
+    
+    // Status filter functionality
+    const statusFilters = document.querySelectorAll('.status-filter');
+    statusFilters.forEach(filter => {
+        filter.addEventListener('click', function() {
+            const status = this.dataset.status;
+            
+            // Update button states
+            statusFilters.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Filter trucks
+            const truckCards = document.querySelectorAll('.truck-card');
+            const truckRows = document.querySelectorAll('.truck-row');
+            
+            if (status === 'all') {
+                truckCards.forEach(card => card.style.display = 'block');
+                truckRows.forEach(row => row.style.display = 'table-row');
+            } else {
+                truckCards.forEach(card => {
+                    card.style.display = card.dataset.status === status ? 'block' : 'none';
+                });
+                truckRows.forEach(row => {
+                    row.style.display = row.dataset.status === status ? 'table-row' : 'none';
+                });
+            }
+        });
+    });
+    
+    // Real-time search functionality
+    const searchInput = document.getElementById('searchInput');
+    let searchTimeout;
+    
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            // You can implement real-time search here if needed
+            // For now, we'll just submit the form on Enter
+        }, 500);
+    });
+    
+    // Submit search on Enter key
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            this.form.submit();
+        }
+    });
+});
+
+// Stop auto-refresh when user leaves the page
+window.addEventListener('beforeunload', function() {
+    stopAutoRefresh();
+});
+</script>
+{% endblock %}

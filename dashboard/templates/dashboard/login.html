@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Truck Productivity Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-card {
+            max-width: 520px;
+            min-width: 340px;
+            margin: 60px auto;
+            border-radius: 28px 8px 28px 8px;
+            box-shadow: 0 16px 48px 0 rgba(102,126,234,0.28), 0 2px 8px 0 rgba(118,75,162,0.12);
+            background: rgba(255,255,255,0.88);
+            backdrop-filter: blur(10px) saturate(120%);
+            border: 1.5px solid rgba(102,126,234,0.12);
+            overflow: hidden;
+            animation: cardFadeIn 1s cubic-bezier(.4,2,.6,1) 0s 1;
+        }
+
+        @keyframes cardFadeIn {
+            0% { opacity: 0; transform: translateY(40px) scale(0.98); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .login-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 32px 24px 18px 24px;
+            text-align: center;
+        }
+        .login-header .fa-truck {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        .login-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .login-form {
+            padding: 28px 24px 24px 24px;
+        }
+        .form-label {
+            font-weight: 500;
+        }
+        .btn-login {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+        .btn-login:hover {
+            background: linear-gradient(90deg, #764ba2 0%, #667eea 100%);
+        }
+        .alert-danger {
+            font-size: 0.98rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="login-header">
+            <i class="fas fa-truck"></i>
+            <div class="login-title">Truck Productivity</div>
+            <div style="font-size:1rem; opacity:0.85;">Dashboard Login</div>
+        </div>
+        <div class="login-form">
+            {% if form.errors %}
+                <div class="alert alert-danger mb-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Please enter a correct username and password.
+                </div>
+            {% endif %}
+            <form method="post" novalidate autocomplete="off">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="id_username" class="form-label">Username</label>
+                    <input type="text" name="username" autofocus required class="form-control" id="id_username" placeholder="Enter your username">
+                </div>
+                <div class="mb-3">
+                    <label for="id_password" class="form-label">Password</label>
+                    <input type="password" name="password" required class="form-control" id="id_password" placeholder="Enter your password">
+                </div>
+                <button type="submit" class="btn btn-login w-100 py-2">Login</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

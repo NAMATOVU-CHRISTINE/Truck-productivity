@@ -1,0 +1,212 @@
+{% extends 'dashboard/base.html' %}
+
+{% block header_title %}Dashboard Overview{% endblock %}
+
+{% block content %}
+<!-- Stats Cards -->
+<div class="row g-4 dashboard-section">
+    <div class="col-md-6 col-lg-3">
+        <div class="card metric-card">
+            <div class="metric-icon primary">
+                <i class="fas fa-truck"></i>
+            </div>
+            <div class="metric-label">Total Loads</div>
+            <div class="metric-value">{{ total_loads|default:0 }}</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card metric-card">
+            <div class="metric-icon success">
+                <i class="fas fa-truck-moving"></i>
+            </div>
+            <div class="metric-label">Total Trucks</div>
+            <div class="metric-value">{{ total_trucks|default:0 }}</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card metric-card">
+            <div class="metric-icon warning">
+                <i class="fas fa-user-tie"></i>
+            </div>
+            <div class="metric-label">Total Drivers</div>
+            <div class="metric-value">{{ total_drivers|default:0 }}</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card metric-card">
+            <div class="metric-icon info">
+                <i class="fas fa-building"></i>
+            </div>
+            <div class="metric-label">Total Customers</div>
+            <div class="metric-value">{{ total_customers|default:0 }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="row g-4 dashboard-section">
+    <div class="col-lg-6">
+        <div class="chart-container">
+            <div class="chart-title">
+                <i class="fas fa-chart-line me-2 text-primary"></i>
+                Monthly Performance
+            </div>
+            <div id="monthly-performance-chart">
+                {{ charts.monthly_performance|safe }}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="chart-container">
+            <div class="chart-title">
+                <i class="fas fa-trophy me-2 text-warning"></i>
+                Top Transporters
+            </div>
+            <div id="transporter-performance-chart">
+                {{ charts.transporter_performance|safe }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Uploads Table -->
+<div class="row g-4 dashboard-section">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header border-0 bg-transparent py-3">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-cloud-upload-alt me-2 text-primary"></i>Recent Uploads
+                    </h5>
+                    <a href="{% url 'dashboard:bulk_upload' %}"
+                        class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                        <i class="fas fa-plus me-1"></i> Upload New
+                    </a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>File Name</th>
+                                <th>Type</th>
+                                <th>Uploaded At</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for upload in recent_uploads %}
+                            <tr>
+                                <td>
+                                    <i class="fas fa-file-csv text-success me-2"></i>
+                                    {{ upload.name }}
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark">{{ upload.upload_type }}</span>
+                                </td>
+                                <td>{{ upload.uploaded_at|date:'M d, Y H:i' }}</td>
+                                <td>
+                                    {% if upload.processed %}
+                                    <span class="badge bg-success">Processed</span>
+                                    {% else %}
+                                    <span class="badge bg-warning">Pending</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5">
+                                    <i class="fas fa-inbox fa-3x text-muted mb-3 d-block"></i>
+                                    <p class="text-muted mb-3">No uploads yet</p>
+                                    <a href="{% url 'dashboard:bulk_upload' %}" class="btn btn-primary">
+                                        <i class="fas fa-upload me-2"></i>Upload Your First File
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Truck Data Table -->
+<div class="row g-4 dashboard-section">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header border-0 bg-transparent py-3">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-truck-moving me-2 text-success"></i>Recent Truck Data
+                    </h5>
+                    <a href="{% url 'dashboard:truck_tracking' %}"
+                        class="btn btn-sm btn-outline-success rounded-pill px-3">
+                        View All <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Load Number</th>
+                                <th>Driver</th>
+                                <th>Truck</th>
+                                <th>Customer</th>
+                                <th>Status</th>
+                                <th>Efficiency</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in recent_data %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'dashboard:truck_detail_tracking' item.id %}"
+                                        class="text-decoration-none fw-medium">
+                                        {{ item.load_number }}
+                                    </a>
+                                </td>
+                                <td>{{ item.driver_name }}</td>
+                                <td>
+                                    <span class="badge bg-light text-dark">{{ item.truck_number }}</span>
+                                </td>
+                                <td>{{ item.customer_name|truncatechars:25 }}</td>
+                                <td>
+                                    {% if item.current_status == 'completed' %}
+                                    <span class="badge bg-success">{{ item.get_current_status_display }}</span>
+                                    {% elif item.current_status == 'in_transit' %}
+                                    <span class="badge bg-info">{{ item.get_current_status_display }}</span>
+                                    {% elif item.current_status == 'delayed' %}
+                                    <span class="badge bg-danger">{{ item.get_current_status_display }}</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ item.get_current_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.efficiency_score %}
+                                    <span class="fw-medium">{{ item.efficiency_score|floatformat:1 }} km/h</span>
+                                    {% else %}
+                                    <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <i class="fas fa-truck fa-3x text-muted mb-3 d-block"></i>
+                                    <p class="text-muted">No truck data available</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
