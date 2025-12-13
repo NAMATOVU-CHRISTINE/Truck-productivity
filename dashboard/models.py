@@ -106,6 +106,10 @@ class TruckPerformanceData(models.Model):
         return self.d4
     budgeted_kms = models.FloatField(null=True, blank=True, help_text="Planned distance to customer (from distance info)")
     
+    # New fields for completeness
+    planned_arrival_time = models.DateTimeField(null=True, blank=True, help_text="Planned Arrival Time at Depot")
+    tlp_vol_hl = models.FloatField(null=True, blank=True, help_text="TLP Volume HL")
+
     # Comments and TIR
     comment_ave_tir = models.TextField(null=True, blank=True, help_text="Comment AVE TIR")
     
