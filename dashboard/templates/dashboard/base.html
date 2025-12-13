@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Truck Productivity Dashboard{% endblock %}</title>
+    <title>{% block title %}Nile Breweries Logistics{% endblock %}</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,26 +23,44 @@
            ROOT VARIABLES & RESET
         ============================================ */
         :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --primary-color: #667eea;
-            --primary-dark: #5a67d8;
-            --secondary-color: #764ba2;
-            --bg-light: #f8fafc;
+            /* Bootstrap Overrides */
+            --bs-primary: #BE1E2D;
+            /* Nile Red */
+            --bs-secondary: #FDB913;
+            /* Nile Gold */
+            --bs-link-color: #BE1E2D;
+            --bs-link-hover-color: #8A1520;
+
+            /* Nile Breweries Brand Colors */
+            --primary-gradient: linear-gradient(135deg, #BE1E2D 0%, #8A1520 100%);
+            --primary-color: #BE1E2D;
+            /* Nile Red */
+            --primary-dark: #8A1520;
+            --secondary-color: #FDB913;
+            /* Nile Gold/Orange */
+            --accent-color: #FDB913;
+
+            --bg-light: #f4f6f8;
             --bg-white: #ffffff;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
-            --text-muted: #94a3b8;
-            --border-color: #e2e8f0;
-            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+            --text-primary: #121212;
+            --text-secondary: #555555;
+            --text-muted: #888888;
+            --border-color: #e0e0e0;
+
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
             --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 16px;
-            --radius-xl: 20px;
-            --sidebar-width: 260px;
-            --header-height: 70px;
-            --transition: all 0.2s ease;
+            --shadow-lg: 0 8px 24px rgba(138, 21, 32, 0.12);
+            /* Red-tinted shadow */
+
+            --radius-sm: 4px;
+            /* Sharper corners for industrial feel */
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+
+            --sidebar-width: 270px;
+            --header-height: 72px;
+            --transition: all 0.25s ease-in-out;
         }
 
         * {
@@ -776,7 +794,7 @@
                         <i class="fas fa-bars"></i>
                     </button>
                     <i class="fas fa-tachometer-alt"></i>
-                    {% block header_title %}Truck Productivity Dashboard{% endblock %}
+                    {% block header_title %}Nile Breweries Logistics{% endblock %}
                 </div>
                 <div class="header-actions">
                     <span class="text-muted" style="font-size: 0.9rem;">
