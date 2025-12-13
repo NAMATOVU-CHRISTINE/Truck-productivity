@@ -11,4 +11,8 @@ mkdir -p staticfiles_build
 echo "Collect static..."
 python3 manage.py collectstatic --noinput --clear
 
+# Run database migrations
+echo "Running migrations..."
+python3 manage.py migrate --noinput
+
 echo "Build End"

@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 from pathlib import Path
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,10 +22,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-^tuwy5l^_z6m5gspk*onx(9=z6*i=wj(-jhmpkq0)h03y+su6m'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-^tuwy5l^_z6m5gspk*onx(9=z6*i=wj(-jhmpkq0)h03y+su6m')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = ['*']
 
@@ -75,25 +76,22 @@ WSGI_APPLICATION = 'truck_productivity.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+# Use PostgreSQL on Vercel (production) and SQLite locally (development)
+DATABASE_URL = os.environ.get('DATABASE_URL')
 
-# Vercel specific: Copy database to tmp if not exists (ReadOnly filesystem workaroud)
-if 'VERCEL' in os.environ:
-    import shutil
-    DB_FILE = BASE_DIR / 'db.sqlite3'
-    TMP_DB_FILE = Path('/tmp') / 'db.sqlite3'
-    if DB_FILE.exists():
-        # Always copy fresh from source to tmp on startup
-        try:
-            shutil.copyfile(DB_FILE, TMP_DB_FILE)
-            DATABASES['default']['NAME'] = TMP_DB_FILE
-        except Exception as e:
-            print(f"Error copying DB to tmp: {e}")
+if DATABASE_URL:
+    # Production: Use PostgreSQL (Vercel or any environment with DATABASE_URL)
+    DATABASES = {
+        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+    }
+else:
+    # Development: Use SQLite
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
