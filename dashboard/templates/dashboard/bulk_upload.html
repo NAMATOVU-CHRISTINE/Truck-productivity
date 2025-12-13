@@ -304,11 +304,11 @@
             if (filesSelected === 0) {
                 statusBadge.textContent = 'Select Files';
                 statusBadge.className = 'badge bg-secondary fs-6';
-                // uploadBtn.disabled = true; // Disabled for testing
-            } else if (filesSelected < 6) {
+                uploadBtn.disabled = true;
+            } else if (filesSelected < 5) {
                 statusBadge.textContent = 'Incomplete';
                 statusBadge.className = 'badge bg-warning fs-6';
-                // uploadBtn.disabled = true; // Disabled for testing
+                uploadBtn.disabled = true;
             } else {
                 statusBadge.textContent = 'Ready to Upload';
                 statusBadge.className = 'badge bg-success fs-6';
