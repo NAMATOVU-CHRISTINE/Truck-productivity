@@ -339,6 +339,23 @@ def bulk_upload(request):
     
     return render(request, 'dashboard/bulk_upload.html', {'form': form})
 
+def get_fuzzy(row, keys, default=None):
+    """Helper to get value from row using multiple possible keys"""
+    # Try exact match first
+    for key in keys:
+        if key in row and pd.notna(row[key]) and str(row[key]).strip() != '':
+            return row[key]
+    # Try case-insensitive match
+    row_keys_lower = {k.lower().strip(): k for k in row.index}
+    for key in keys:
+        k_lower = key.lower().strip()
+        if k_lower in row_keys_lower:
+            actual_key = row_keys_lower[k_lower]
+            val = row[actual_key]
+            if pd.notna(val) and str(val).strip() != '':
+                return val
+    return default
+
 
 def extract_unified_truck_data(row, file_type):
     """Extract truck data from any file type and return standardized format"""
@@ -348,13 +365,17 @@ def extract_unified_truck_data(row, file_type):
         # File 1: Depot Departures Information
         dj_departure_time = pd.to_datetime(row.get('DJ Departure Time'), errors='coerce')
         dj_departure_time = make_naive(dj_departure_time)
+        
+        load_num = get_fuzzy(row, ['Load Number', 'Load Name', 'Load', 'Order No'], 'Unknown')
+        truck_num = get_fuzzy(row, ['Vehicle Reg', 'Truck Number', 'Vehicle', 'Truck'], 'Unknown')
+        
         data = {
             'month_name': pd.to_datetime(row.get('Schedule Date', '2025-01-01')).strftime('%B'),
             'transporter': row.get('Depot', 'Unknown'),
-            'load_number': str(row.get('Load Name', 'Unknown')),
+            'load_number': str(load_num),
             'mode_of_capture': 'DJ',
             'driver_name': str(row.get('Driver Name', 'Unknown')),
-            'truck_number': str(row.get('Vehicle Reg', 'Unknown')),
+            'truck_number': str(truck_num),
             'customer_name': 'Unknown Customer',  # Not in this file type
             'dj_departure_time': dj_departure_time,
             'departure_deviation_min': pd.to_numeric(row.get('Departure Time Difference (DJ vs Planned)'), errors='coerce'),
@@ -366,13 +387,17 @@ def extract_unified_truck_data(row, file_type):
         # File 2: Customer Timestamps - TIME DATA IN MINUTES
         arrival_at_customer = pd.to_datetime(row.get('ArrivedAtCustomer(Odo)'), errors='coerce')
         arrival_at_customer = make_naive(arrival_at_customer)
+        
+        load_num = get_fuzzy(row, ['Load Number', 'Load Name', 'Load', 'load_name'], 'Unknown')
+        truck_num = get_fuzzy(row, ['Vehicle Reg', 'Truck Number', 'Vehicle'], 'Unknown')
+        
         data = {
             'month_name': pd.to_datetime(row.get('schedule_date', '2025-01-01')).strftime('%B'),
             'transporter': row.get('Depot', 'Unknown'),
-            'load_number': str(row.get('load_name', 'Unknown')),
+            'load_number': str(load_num),
             'mode_of_capture': 'DJ',
             'driver_name': str(row.get('DriverName', 'Unknown')),
-            'truck_number': str(row.get('Vehicle Reg', 'Unknown')),
+            'truck_number': str(truck_num),
             'customer_name': str(row.get('customer_name', 'Unknown')),
             'arrival_at_customer': arrival_at_customer,
             'service_time_at_customer': pd.to_numeric(row.get('Total Time Spent @ Customer'), errors='coerce'),
@@ -387,13 +412,17 @@ def extract_unified_truck_data(row, file_type):
         planned_load_distance = pd.to_numeric(row.get('Planned Load Distance'), errors='coerce')
         planned_distance_to_customer = pd.to_numeric(row.get('PlannedDistanceToCustomer'), errors='coerce')
         km_deviation = pd.to_numeric(row.get('Load Distance Difference (Planned vs. DJ)'), errors='coerce')
+        
+        load_num = get_fuzzy(row, ['Load Number', 'Load Name', 'Load'], 'Unknown')
+        truck_num = get_fuzzy(row, ['Vehicle Reg', 'Truck Number', 'Vehicle'], 'Unknown')
+        
         data = {
             'month_name': pd.to_datetime(row.get('Schedule Date', '2025-01-01')).strftime('%B'),
             'transporter': row.get('Depot', 'Unknown'),
-            'load_number': str(row.get('Load Name', 'Unknown')),
+            'load_number': str(load_num),
             'mode_of_capture': 'DJ',
             'driver_name': str(row.get('Driver Name', 'Unknown')),
-            'truck_number': str(row.get('Vehicle Reg', 'Unknown')),
+            'truck_number': str(truck_num),
             'customer_name': str(row.get('Customer', 'Unknown')),
             'budgeted_kms': planned_load_distance,
             'PlannedDistanceToCustomer': planned_distance_to_customer,
