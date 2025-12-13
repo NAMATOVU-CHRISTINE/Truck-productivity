@@ -346,7 +346,7 @@ def get_fuzzy(row, keys, default=None):
         if key in row and pd.notna(row[key]) and str(row[key]).strip() != '':
             return row[key]
     # Try case-insensitive match
-    row_keys_lower = {k.lower().strip(): k for k in row.index}
+    row_keys_lower = {str(k).lower().strip(): k for k in row.index}
     for key in keys:
         k_lower = key.lower().strip()
         if k_lower in row_keys_lower:
@@ -713,6 +713,11 @@ def process_timestamps_duration(df, csv_upload):
             for index, row in df.iterrows():
                 load_number = str(get_fuzzy(row, ['Load Number', 'Load Name', 'Load'], 'Unknown'))
                 truck_number = str(get_fuzzy(row, ['Vehicle Reg', 'Truck Number', 'Vehicle'], 'Unknown'))
+                
+                # Skip if critical identifiers are missing
+                if load_number == 'Unknown' and truck_number == 'Unknown':
+                    continue
+                    
                 driver_name = str(get_fuzzy(row, ['Driver Name', 'DriverName', 'Driver'], 'Unknown Driver'))
                 customer_name = str(get_fuzzy(row, ['Customer Name', 'customer_name', 'Customer'], 'Unknown Customer'))
                 
@@ -757,6 +762,11 @@ def process_avg_time_route(df, csv_upload):
             for index, row in df.iterrows():
                 load_number = str(get_fuzzy(row, ['Load Number', 'Load Name', 'Load'], 'Unknown'))
                 truck_number = str(get_fuzzy(row, ['Vehicle Reg', 'Truck Number', 'Vehicle'], 'Unknown'))
+                
+                # Skip if critical identifiers are missing
+                if load_number == 'Unknown' and truck_number == 'Unknown':
+                    continue
+
                 driver_name = str(get_fuzzy(row, ['Driver Name', 'DriverName', 'Driver'], 'Unknown Driver'))
                 customer_name = str(get_fuzzy(row, ['Customer Name', 'customer_name', 'Customer'], 'Unknown Customer'))
                 
@@ -799,6 +809,11 @@ def process_time_route_info(df, csv_upload):
             for index, row in df.iterrows():
                 load_number = str(get_fuzzy(row, ['Load Number', 'Load Name', 'Load'], 'Unknown'))
                 truck_number = str(get_fuzzy(row, ['Vehicle Reg', 'Truck Number', 'Vehicle'], 'Unknown'))
+                
+                # Skip if critical identifiers are missing
+                if load_number == 'Unknown' and truck_number == 'Unknown':
+                    continue
+
                 driver_name = str(get_fuzzy(row, ['Driver Name', 'DriverName', 'Driver'], 'Unknown Driver'))
                 customer_name = str(get_fuzzy(row, ['Customer Name', 'customer_name', 'Customer'], 'Unknown Customer'))
                 
@@ -843,6 +858,11 @@ def process_generic_csv(df, csv_upload):
                 # Try to extract common fields - prioritize actual column names from uploads
                 load_number = str(get_fuzzy(row, ['Load Number', 'Load Name', 'Load Name 1', 'Load', 'ID'], 'Unknown'))
                 truck_number = str(get_fuzzy(row, ['Vehicle Reg', 'Truck Number', 'Vehicle', 'Truck'], 'Unknown'))
+                
+                # Skip if critical identifiers are missing
+                if load_number == 'Unknown' and truck_number == 'Unknown':
+                    continue
+
                 driver_name = str(get_fuzzy(row, ['Driver Name', 'DriverName', 'Driver'], 'Unknown Driver'))
                 customer_name = str(get_fuzzy(row, ['Customer Name', 'customer_name', 'Customer'], 'Unknown Customer'))
                 
