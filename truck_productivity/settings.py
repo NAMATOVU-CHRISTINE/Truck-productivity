@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -80,6 +81,19 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# Vercel specific: Copy database to tmp if not exists (ReadOnly filesystem workaroud)
+if 'VERCEL' in os.environ:
+    import shutil
+    DB_FILE = BASE_DIR / 'db.sqlite3'
+    TMP_DB_FILE = Path('/tmp') / 'db.sqlite3'
+    if DB_FILE.exists():
+        # Always copy fresh from source to tmp on startup
+        try:
+            shutil.copyfile(DB_FILE, TMP_DB_FILE)
+            DATABASES['default']['NAME'] = TMP_DB_FILE
+        except Exception as e:
+            print(f"Error copying DB to tmp: {e}")
 
 
 # Password validation
