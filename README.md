@@ -1,129 +1,87 @@
 # Truck Productivity Dashboard
 
-A Django web application for analyzing truck productivity data by combining multiple CSV files to generate comprehensive performance reports.
+A powerful Django-based analytics platform for tracking and visualizing truck fleet performance. This application processes various operational CSV logs to generate comprehensive insights on delivery times, route efficiency, and driver performance.
 
-## Features
+## 🚀 Features
 
-- **CSV File Upload**: Upload multiple types of CSV files (Distance Information, Time in Route, Timestamps, etc.)
-- **Data Processing**: Automatically processes and combines data from different CSV sources
-- **Interactive Dashboard**: Visual dashboard with key performance metrics
-- **Performance Reports**: Detailed reports with filtering and export capabilities
-- **Data Visualization**: Charts and graphs using Plotly for better insights
-- **Excel Export**: Export processed data to Excel for further analysis
+- **Multi-Source Data Integration**: Seamlessly combines data from 6 distinct CSV sources.
+- **Real-time Progress Tracking**: visual tracking of truck journeys from Depot to Customer and back.
+- **Performance Analytics**:
+  - Efficiency Scores (Distance/Time)
+  - On-time vs Delayed Deliveries
+  - Budgeted vs Actual Metrics (Days, Kilometers)
+- **Interactive Dashboard**: Modern, responsive UI with charts and key metrics.
+- **Excel Reporting**: Generate detailed consolidated reports for offline analysis.
 
-## Supported CSV File Types
+## 📂 Supported CSV Files
 
-1. **Distance Information**: Contains planned vs actual distance data
-2. **Time in Route Information**: Contains time performance metrics
-3. **Timestamps and Duration**: Contains timing data for various milestones
-4. **Average Time in Route**: Contains customer-level performance summaries
+The system is designed to process the following 6 specific CSV file types:
 
-## Installation
+1. **Depot Departures Information**: Core trip data including Driver, Vehicle, and planned departure times.
+2. **Customer Timestamps**: Arrival and service times at customer locations (calculates D1, D2 distances).
+3. **Distance Information**: Planned vs Actual distance data for route optimization.
+4. **Timestamps and Duration**: detailed gate and load completion timestamps.
+5. **Average Time in Route**: Historical average performance data.
+6. **Time in Route Information**: Specific trip duration and deviation analysis.
 
-1. Install Python 3.8 or higher
-2. Install the required packages:
+## 🛠️ Installation
+
+### Prerequisites
+- Python 3.8+
+- pip (Python package manager)
+
+### Setup Steps
+
+1. **Clone the repository:**
+   ```bash
+   git clone <your-repo-url>
+   cd truck-productivity
+   ```
+
+2. **Create and activate a virtual environment:**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. **Install dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
 
-3. Run database migrations:
+4. **Initialize the database:**
    ```bash
    python manage.py makemigrations
    python manage.py migrate
    ```
 
-4. Load sample data (optional):
-   ```bash
-   python load_sample_data.py
-   ```
-
-5. Create a superuser (optional):
+5. **Create a superuser (for admin access):**
    ```bash
    python manage.py createsuperuser
    ```
 
-## Running the Application
+6. **Run the development server:**
+   ```bash
+   python manage.py runserver
+   ```
+   Access the dashboard at `http://127.0.0.1:8000/`.
 
-Start the development server:
-```bash
-python manage.py runserver
-```
+## 🖥️ Usage
 
-Access the application at: http://127.0.0.1:8000/
+1. **Upload Data**: Navigate to the "Bulk Upload" page. You can upload any combination of the 6 supported file types.
+2. **Auto-Processing**: The system automatically links records based on Load Number, Truck Number, and Date.
+3. **Dashboard**: View high-level metrics on the main dashboard.
+4. **Track Trucks**: Use the "Track Trucks" page to see the real-time status of active shipments.
+5. **Export**: Go to "Export Excel" to download a full productivity report.
 
-## Usage
+## 🏗️ Tech Stack
 
-1. **Upload Data**: Go to the Upload page and select your CSV files
-2. **View Dashboard**: The main dashboard shows key metrics and depot performance
-3. **Generate Reports**: Use the Reports page to filter data and view detailed analytics
-4. **Export Data**: Export processed data to Excel for external analysis
+- **Backend**: Django (Python)
+- **Database**: SQLite (default) / PostgreSQL (production ready)
+- **Frontend**: HTML5, CSS3, JavaScript (Bootstrap 5)
+- **Data Processing**: Pandas
+- **Visualization**: Plotly.js, Chart.js
 
-## CSV File Format Requirements
+## 📝 License
 
-### Distance Information CSV
-Required columns:
-- Schedule Date
-- Depot
-- Load Name
-- Driver Name
-- Vehicle Reg
-- Customer
-- PlannedDistanceToCustomer
-- Distance Difference (Planned vs DJ)
-
-### Time in Route Information CSV
-Required columns:
-- Schedule Date
-- Depot Code
-- Load
-- Driver
-- Customer
-- Time in Route (min)
-- Planned Time in Route (min)
-- Time In Route Difference ( DJ - Planned)
-
-### Timestamps and Duration CSV
-Required columns:
-- schedule_date
-- Depot
-- load_name
-- Load StartTime (Pre-Trip Start)
-- GateManifestTime
-- LoadCompleted
-
-## Project Structure
-
-```
-truck_productivity/
-├── dashboard/              # Main dashboard app
-│   ├── models.py          # Database models
-│   ├── views.py           # View logic
-│   ├── forms.py           # Form definitions
-│   ├── templates/         # HTML templates
-│   └── admin.py           # Admin interface
-├── truck_productivity/     # Project settings
-├── static/                # Static files (CSS, JS)
-├── media/                 # Uploaded files
-├── manage.py              # Django management script
-├── load_sample_data.py    # Sample data loader
-└── requirements.txt       # Python dependencies
-```
-
-## Key Features
-
-- **Efficiency Scoring**: Automatic calculation of efficiency scores based on time and distance performance
-- **Performance Tracking**: Track on-time vs delayed deliveries
-- **Depot Comparison**: Compare performance across different depots
-- **Data Validation**: Automatic data validation and error handling during CSV processing
-- **Responsive Design**: Mobile-friendly interface using Bootstrap
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
-## License
-
-This project is for internal use and data analysis purposes.
+This project is proprietary software for internal use.
