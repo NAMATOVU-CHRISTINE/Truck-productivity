@@ -63,6 +63,7 @@ class TruckPerformanceData(models.Model):
     load_number = models.CharField(max_length=50)
     mode_of_capture = models.CharField(max_length=50, null=True, blank=True)
     driver_name = models.CharField(max_length=100)
+    employee_id = models.CharField(max_length=50, null=True, blank=True, help_text="Employee/Driver ID")
     truck_number = models.CharField(max_length=50)
     customer_name = models.CharField(max_length=200)
     
