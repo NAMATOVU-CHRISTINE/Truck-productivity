@@ -12,9 +12,9 @@ class CSVUploadAdmin(admin.ModelAdmin):
 
 @admin.register(TruckPerformanceData)
 class TruckPerformanceDataAdmin(admin.ModelAdmin):
-    list_display = ['load_number', 'create_date', 'transporter', 'customer_name', 'driver_name', 'truck_number', 'efficiency_score']
+    list_display = ['load_number', 'employee_id', 'create_date', 'transporter', 'customer_name', 'driver_name', 'truck_number', 'efficiency_score']
     list_filter = ['transporter', 'create_date', 'mode_of_capture', 'customer_name']
-    search_fields = ['load_number', 'driver_name', 'customer_name', 'truck_number', 'transporter']
+    search_fields = ['load_number', 'employee_id', 'driver_name', 'customer_name', 'truck_number', 'transporter']
     date_hierarchy = 'create_date'
     ordering = ['-create_date']
     readonly_fields = ['created_at', 'updated_at', 'total_distance', 'total_time', 'efficiency_score']
